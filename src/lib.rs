@@ -4,7 +4,7 @@ use anyhow::{anyhow, Result};
 use rand::seq::SliceRandom;
 use reqwest::Proxy;
 use solana_client::rpc_client::RpcClient;
-use solana_sdk::signature::Keypair;
+use solana_sdk::{signature::Keypair, signer::EncodableKey};
 use tracing::debug;
 
 pub mod api;
@@ -56,8 +56,12 @@ pub fn get_rpc_client() -> Result<Arc<RpcClient>> {
 }
 
 pub fn get_wallet() -> Result<Arc<Keypair>> {
-    let wallet = Keypair::from_base58_string(&env::var("PRIVATE_KEY")?);
-    return Ok(Arc::new(wallet));
+    let keypair = Keypair::read_from_file(&env::var("KEYPAIR_PATH").unwrap_or("id.json".to_string()));
+    if let Ok(keypair) = keypair {
+        return Ok(Arc::new(keypair));
+    } else {
+        Err(anyhow!("Keypair loading error"))
+    }
 }
 
 #[cfg(test)]
